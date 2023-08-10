@@ -34,11 +34,18 @@ def enviar_email():
     msg.add_header('Content-Type', 'text/html')
     msg.set_payload(corpo_email)
 
-    s = smtplib.SMTP('smtp.gmail.com:587')
-    s.starttls()
-    s.login(msg['From'], password)
-    s.sendmail(msg['From'], [msg['To']], msg.as_string().encode('utf-8'))
-    print('Email enviado')
+    try:
+        s = smtplib.SMTP('smtp.gmail.com:587')
+        s.starttls()
+        s.login(msg['From'], password)
+        s.sendmail(msg['From'], [msg['To']], msg.as_string().encode('utf-8'))
+        print('Email enviado')
+    except smtplib.SMTPAuthenticationError:
+        print('Erro de autenticação. Verifique suas credenciais.')
+    except smtplib.SMTPException as e:
+        print('Erro ao enviar o email: {0}'.format(e))
+    finally:
+        s.quit()
 
 def main():
     while True:
@@ -48,7 +55,7 @@ def main():
             texto_falado = abrir_microfone()
             if texto_falado:
                 print("Texto falado: " + texto_falado)
-                if "socorro" in texto_falado.lower():
+                if any(keyword in texto_falado.lower() for keyword in ["socorro", "agressão", "ajuda", "pedido"]):
                     enviar_email()
             else:
                 print("Não foi possível reconhecer a fala.")
